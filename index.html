@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#fff7fa">
+    <meta name="description"
+        content="تسوقي إكسسوارات FEDAA STORE. سلاسل وأساور وخواتم وحلقان وخلخال، مع توصيل إلى محافظات مصر.">
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Fedaa Store | إكسسوارات عصرية">
+    <meta property="og:description" content="تسوقي أحدث تشكيلة إكسسوارات مميزة ورقيقة من متجر Fedaa Store.">
+    <meta property="og:image" content="logo.png">
+
+    <!-- Meta Tags للمعاينة العامة -->
+    <title>Fedaa Store | إكسسوارات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20261031-1957">
+    <script defer src="catalog.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="supabase-config.js"></script>
+    <script defer src="supabase-client.js"></script>
+    <script src="app.js?v=20261031-1957" defer></script>
+</head>
+
+<body>
+    <div class="announcement">إكسسوارات FEDAA STORE <span aria-hidden="true">✳</span> توصيل إلى جميع محافظات مصر
+    </div>
+    <header class="site-header">
+        <a class="brand" href="#home" aria-label="FEDAA STORE، الصفحة الرئيسية"><img class="brand-logo" src="logo.png"
+                alt=""><span class="brand-name">FEDAA STORE</span></a>
+        <nav class="main-nav" aria-label="التنقل الرئيسي">
+            <a href="#shop">تسوّقي</a>
+            <a href="#shop" data-nav-category="chains">سلاسل وكوليهات</a>
+            <a href="#shop" data-nav-category="earrings">حلقان</a>
+            <a href="#about">عن المتجر</a>
+        </nav>
+        <div class="header-actions">
+            <label class="search-box" aria-label="ابحثي عن إكسسوار">
+                <span aria-hidden="true">⌕</span>
+                <input id="search-input" type="search" placeholder="بتدوري على إيه؟" autocomplete="off">
+            </label>
+            <button class="icon-button cart-trigger" id="cart-trigger" type="button" aria-label="افتحي سلة التسوق">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                        d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L21 8H6M10 20a.8.8 0 1 1-1.6 0 .8.8 0 0 1 1.6 0Zm9 0a.8.8 0 1 1-1.6 0 .8.8 0 0 1 1.6 0Z" />
+                </svg>
+                <span class="cart-count" id="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <main id="home">
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-copy">
+                <p class="eyebrow"><span></span> تفاصيل صغيرة، فرق كبير</p>
+                <h1 id="hero-title">إكسسوارات<br>تشبه <em>حكايتك.</em></h1>
+                <p class="hero-description">قطع مختارة بعناية، لكل يوم ولكل نسخة منك. لمستك الأخيرة تبدأ من هنا.</p>
+                <a class="button button-dark" href="#shop">اكتشفي المجموعة <span aria-hidden="true">←</span></a>
+                <div class="hero-note"><span class="note-stars" aria-hidden="true">✳</span><span>مختارة بحب<br><b>ومتاحة
+                            ليكي في كل مصر</b></span></div>
+            </div>
+            <div class="hero-visual">
+                <img id="hero-image" src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&amp;fit=crop&amp;w=1100&amp;q=85"
+                    alt="تفاصيل إكسسوارات ذهبية أنيقة" fetchpriority="high">
+                <div class="hero-stamp" aria-label="مصممة لتدوم"><span>مصممة</span><b>لتدوم</b><span class="stamp-star"
+                        aria-hidden="true">✳</span></div>
+                <div class="hero-caption"><span>01 / 03</span><span>مجموعة كل يوم</span></div>
+            </div>
+        </section>
+
+        <section class="shop-section" id="shop" aria-labelledby="shop-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">اكتشفي تشكيلتنا</p>
+                    <h2 id="shop-title">تفاصيل تكمل <span>إطلالتك</span></h2>
+                </div>
+                <p class="section-aside">تفاصيل بسيطة، معمولة عشان تكمّل إطلالتك.</p>
+            </div>
+            <div class="shop-toolbar">
+                <div class="filter-list" role="group" aria-label="تصفية حسب النوع">
+                    <button class="filter-button is-active" type="button" data-category="all" aria-pressed="true">
+                        <span class="category-icon" aria-hidden="true">✧</span><span>كل القطع <span class="filter-count"
+                                id="all-count"></span></span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="chains" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">⌁</span><span>سلاسل وكوليهات</span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="bracelets" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">◌</span><span>أساور وانسيالات</span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="rings" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">○</span><span>خواتم</span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="earrings" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">⋄</span><span>حلقان</span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="anklets" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">∿</span><span>خلخال</span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="bangles" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">◉</span><span>غوايش</span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="sets" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">✧</span><span>أطقم</span>
+                    </button>
+                    <button class="filter-button" type="button" data-category="misc" aria-pressed="false">
+                        <span class="category-icon" aria-hidden="true">✳</span><span>متنوعات</span>
+                    </button>
+                </div>
+                <label class="sort-control">ترتيب حسب
+                    <select id="sort-select" aria-label="ترتيب المنتجات">
+                        <option value="featured">المميزة</option>
+                        <option value="price-asc">السعر: الأقل أولًا</option>
+                        <option value="price-desc">السعر: الأعلى أولًا</option>
+                    </select>
+                </label>
+            </div>
+            <div class="product-grid" id="product-grid" aria-live="polite"></div>
+            <p class="empty-state" id="store-data-warning" role="status" hidden></p>
+            <p class="empty-state" id="empty-state" hidden>ملقيناش قطع مطابقة. جرّبي كلمة تانية أو اختاري قسم مختلف.</p>
+        </section>
+
+        <section class="promise-strip" id="about" aria-label="مميزات FEDAA STORE">
+            <div><span class="promise-icon" aria-hidden="true">✳</span>
+                <p><b>اختيارات بتفاصيلها</b><br>كل قطعة ليها حكاية</p>
+            </div>
+            <div><span class="promise-icon" aria-hidden="true">↗</span>
+                <p><b>توصيل لكل مصر</b><br>لحد باب بيتك</p>
+            </div>
+            <div><span class="promise-icon" aria-hidden="true">♡</span>
+                <p><b>تغليف يليق بيكي</b><br>جاهز كمان للهدايا</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <a class="brand footer-brand" href="#home" aria-label="FEDAA STORE"><img class="brand-logo" src="logo.png"
+                alt=""><span class="brand-name">FEDAA STORE</span></a>
+        <p>إكسسواراتك بطريقتك.</p>
+        <span>© <span id="current-year"></span> FEDAA STORE. صُنع بحب في مصر.</span>
+    </footer>
+
+    <div class="overlay" id="overlay" hidden></div>
+    <section class="product-modal" id="product-modal" role="dialog" aria-modal="true"
+        aria-labelledby="product-modal-title" aria-hidden="true" inert>
+        <div class="modal-heading">
+            <div>
+                <p class="eyebrow">تفاصيل القطعة</p>
+                <h2 id="product-modal-title"></h2>
+            </div>
+            <button class="close-button" id="close-product-modal" type="button" aria-label="إغلاق تفاصيل المنتج">×</button>
+        </div>
+        <div class="product-modal-content">
+            <div class="product-modal-image-wrap">
+                <img id="product-modal-image" src="" alt="">
+                <button class="product-modal-gallery-button product-modal-gallery-button--previous" type="button"
+                    data-modal-gallery-step="-1" aria-label="الصورة السابقة" hidden>‹</button>
+                <button class="product-modal-gallery-button product-modal-gallery-button--next" type="button"
+                    data-modal-gallery-step="1" aria-label="الصورة التالية" hidden>›</button>
+                <div class="gallery-dots product-modal-gallery-dots" id="product-modal-gallery-dots"
+                    role="group" aria-label="صور المنتج" hidden></div>
+            </div>
+            <div class="product-modal-info">
+                <p class="product-modal-category" id="product-modal-category"></p>
+                <p class="product-modal-price" id="product-modal-price"></p>
+                <p class="product-modal-description" id="product-modal-description"></p>
+                <label class="product-modal-quantity">الكمية
+                    <input id="product-modal-quantity" type="number" min="1" step="1" value="1" inputmode="numeric">
+                </label>
+                <button class="button button-dark product-modal-add" id="product-modal-add" type="button">
+                    أضيفي للسلة <span aria-hidden="true">＋</span>
+                </button>
+            </div>
+        </div>
+    </section>
+    <aside class="cart-panel" id="cart-panel" aria-labelledby="cart-title" aria-hidden="true" inert>
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">اختياراتك الحلوة</p>
+                <h2 id="cart-title">سلة التسوق</h2>
+            </div><button class="close-button" id="close-cart" type="button" aria-label="إغلاق السلة">×</button>
+        </div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-empty" id="cart-empty"><span aria-hidden="true">♡</span>
+            <p>لسه مفيش حاجة في سلتك</p><button class="text-button" id="continue-shopping" type="button">اكتشفي القطع
+                <span aria-hidden="true">←</span></button>
+        </div>
+        <div class="cart-bottom" id="cart-bottom" hidden>
+            <div class="shipping-note" id="shipping-note"></div>
+            <div class="cart-total"><span>إجمالي المنتجات</span><strong id="cart-total">٠ ج.م</strong></div>
+            <button class="button button-dark checkout-trigger" id="checkout-trigger" type="button">إتمام الطلب <span
+                    aria-hidden="true">←</span></button>
+            <p class="cart-footnote">رسوم التوصيل تُحدد حسب المحافظة وتُدفع نقداً عند الاستلام</p>
+        </div>
+    </aside>
+
+    <section class="checkout-modal" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title"
+        aria-hidden="true" inert>
+        <div class="modal-heading">
+            <div>
+                <p class="eyebrow">خطوة أخيرة</p>
+                <h2 id="checkout-title">بيانات الطلب والتوصيل</h2>
+            </div><button class="close-button" id="close-checkout" type="button"
+                aria-label="إغلاق نموذج الطلب">×</button>
+        </div>
+        <p class="deposit-notice">اختاري دفع نصف قيمة المنتجات الآن أو سدادها كاملة؛ رسوم التوصيل تُحدد بعد مراجعة العنوان وتُدفع نقداً عند الاستلام.</p>
+        <form class="checkout-form" name="accessories-order" enctype="multipart/form-data">
+            <label class="field-label">الاسم بالكامل<input name="customer-name" type="text" maxlength="120" autocomplete="name"
+                    placeholder="اسمك" required></label>
+            <label class="field-label">رقم الموبايل<input name="customer_phone" type="tel" inputmode="tel" autocomplete="tel"
+                    placeholder="01xxxxxxxxx" pattern="01[0125][0-9]{8}"
+                    title="اكتبي رقم موبايل مصري صحيحًا من 11 رقمًا" required></label>
+            <div class="field-row">
+                <label class="field-label">المحافظة<input name="governorate" type="text" maxlength="80" autocomplete="address-level1"
+                        placeholder="مثال: القاهرة" required></label>
+                <label class="field-label">المدينة / المركز<input name="city" type="text" maxlength="80" autocomplete="address-level2"
+                        placeholder="المدينة أو المركز" required></label>
+            </div>
+            <label class="field-label">العنوان بالتفصيل<textarea name="customer_address" rows="2" maxlength="500" autocomplete="street-address"
+                    placeholder="اسم المنطقة والشارع، رقم العمارة والشقة" required></textarea></label>
+            <fieldset class="payment-options">
+                <legend>وسيلة الدفع</legend>
+                <div class="payment-option-card">
+                    <label class="payment-option"><input type="radio" name="payment-method" value="Vodafone Cash"
+                            checked><span class="payment-icon vodafone-icon" aria-hidden="true">V</span><span><b>فودافون
+                                كاش</b><small>01001627767</small></span></label>
+                    <div class="payment-option-action transfer-instructions" data-payment-action="Vodafone Cash"
+                        aria-live="polite"></div>
+                </div>
+                <div class="payment-option-card">
+                    <label class="payment-option"><input type="radio" name="payment-method" value="InstaPay"><span
+                            class="payment-icon instapay-icon"
+                            aria-hidden="true">↗</span><span><b>InstaPay</b><small>01001627767</small></span></label>
+                    <div class="payment-option-action transfer-instructions" data-payment-action="InstaPay"
+                        aria-live="polite" hidden></div>
+                </div>
+            </fieldset>
+            <fieldset class="payment-options payment-plan-options">
+                <legend>اختاري المبلغ المطلوب دفعه</legend>
+                <label class="payment-option"><input type="radio" name="payment-plan" value="deposit" checked>
+                    <span><b>دفع نصف قيمة المنتجات</b><small>٥٠٪ من المنتجات الآن؛ الباقي ورسوم التوصيل نقداً عند الاستلام</small></span></label>
+                <label class="payment-option"><input type="radio" name="payment-plan" value="full">
+                    <span><b>دفع المبلغ كاملاً</b><small>سداد كامل قيمة المنتجات الآن</small></span></label>
+            </fieldset>
+            <label class="field-label receipt-label">صورة إيصال التحويل <span class="required-mark">مطلوب</span>
+                <span class="upload-control"><input id="receipt-input" type="file" name="receipt"
+                        accept="image/jpeg,image/png,image/webp" required><span class="upload-icon"
+                        aria-hidden="true">↑</span><span class="upload-copy" id="upload-copy">اختاري صورة من
+                        جهازك<small>سيتم ضغط الصورة تلقائياً، حتى ٢٠ ميجابايت قبل الضغط</small></span></span>
+            </label>
+            <p class="form-error" id="form-error" role="alert" hidden></p>
+            <div class="checkout-summary"><span>إجمالي المنتجات</span><strong id="checkout-total">٠ ج.م</strong></div>
+            <div class="checkout-summary delivery-row"><span>مصاريف التوصيل (كاش عند الاستلام)</span><strong id="delivery-fee-total">تُحدد بعد مراجعة العنوان</strong></div>
+            <div class="checkout-summary deposit-row"><span id="deposit-label">المبلغ المطلوب الآن (٥٠٪)</span><strong
+                    id="deposit-total">٠ ج.م</strong></div>
+            <div class="checkout-summary remaining-row"><span>المتبقي للتحصيل عند الاستلام (باقي المنتجات + التوصيل)</span><strong id="remaining-total">٠
+                    ج.م</strong></div>
+            <button class="button button-dark submit-order" type="submit">تأكيد الطلب <span
+                    aria-hidden="true">←</span></button>
+            <p class="privacy-note">لن نستخدم بياناتك إلا لتأكيد طلبك وتوصيله.</p>
+        </form>
+    </section>
+</body>
+
+</html>

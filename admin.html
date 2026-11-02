@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#fff7fa">
+    <meta name="description" content="لوحة إدارة FEDAA STORE">
+    <title>إدارة المتجر | FEDAA STORE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css?v=20261031-1957">
+    <script defer src="catalog.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="supabase-config.js"></script>
+    <script defer src="supabase-client.js"></script>
+    <script defer src="admin-client.js?v=20261102-2345"></script>
+</head>
+
+<body class="admin-page">
+    <header class="admin-header">
+        <a class="brand admin-brand" href="index.html" aria-label="FEDAA STORE"><img class="brand-logo" src="logo.png"
+                alt=""><span class="brand-name">FEDAA STORE</span></a>
+        <a class="store-link" href="index.html">العودة إلى المتجر <span aria-hidden="true">↗</span></a>
+    </header>
+    <main class="admin-main">
+        <section class="login-view" id="login-view" aria-labelledby="login-title">
+            <p class="eyebrow">مساحة المالك</p>
+            <h1 id="login-title">إدارة المتجر</h1>
+            <p class="admin-lead">سجّلي الدخول لإدارة المنتجات ومراجعة الطلبات.</p>
+            <div class="admin-alert setup-warning" id="setup-warning" role="status" hidden></div>
+            <form class="admin-login-form" id="login-form">
+                <label class="field-label">البريد الإلكتروني<input id="login-email" name="email"
+                        type="email" autocomplete="username" required></label>
+                <label class="field-label">كلمة المرور<input id="login-password" name="password" type="password"
+                        autocomplete="current-password" required></label>
+                <p class="admin-alert" id="login-error" role="alert" hidden></p>
+                <button class="button button-dark" id="login-button" type="submit">تسجيل الدخول</button>
+                <p class="field-help">بيانات الدخول تُدار من إعدادات Supabase Auth، ولا تُحفظ في ملفات الموقع.</p>
+            </form>
+            <p class="setup-hint">أكملي خطوات الربط في <a href="README.md#supabase-setup">دليل إعداد Supabase</a>.</p>
+        </section>
+
+        <section class="dashboard-view" id="dashboard-view" hidden>
+            <div class="dashboard-heading">
+                <div>
+                    <p class="eyebrow">FEDAA STORE</p>
+                    <h1>لوحة الإدارة</h1>
+                </div>
+                <div class="owner-actions"><span id="owner-email"></span><button class="button button-outline"
+                        id="sign-out" type="button">تسجيل الخروج</button></div>
+            </div>
+            <div class="admin-alert" id="dashboard-message" role="status" hidden></div>
+            <div class="admin-tabs" role="tablist" aria-label="أقسام لوحة الإدارة">
+                <button class="admin-tab is-active" type="button" role="tab" id="products-tab" aria-selected="true"
+                    aria-controls="products-panel" data-panel="products-panel">المنتجات</button>
+                <button class="admin-tab" type="button" role="tab" id="orders-tab" aria-selected="false"
+                    aria-controls="orders-panel" data-panel="orders-panel">الطلبات <span class="order-count"
+                        id="order-count">٠</span></button>
+            </div>
+
+            <section class="admin-panel" id="products-panel" role="tabpanel" aria-labelledby="products-tab">
+                <div class="panel-title-row">
+                    <div>
+                        <h2>كتالوج المنتجات</h2>
+                        <p>عدّلي المنتجات المنشورة مباشرة في المتجر.</p>
+                    </div><span class="item-count" id="product-count">٠ منتج</span>
+                </div>
+                <div class="product-admin-layout">
+                    <form class="product-form" id="product-form">
+                        <h3 id="product-form-title">إضافة منتج</h3>
+                        <input id="product-id" type="hidden">
+                        <label class="field-label">اسم المنتج<input id="product-name" type="text" maxlength="90"
+                                required></label>
+                        <div class="field-row">
+                            <label class="field-label">القسم<select id="product-category" required>
+                                    <option value="chains">سلاسل وكوليهات</option>
+                                    <option value="bracelets">أساور وانسيالات</option>
+                                    <option value="rings">خواتم</option>
+                                    <option value="earrings">حلقان</option>
+                                    <option value="anklets">خلخال</option>
+                                    <option value="bangles">غوايش</option>
+                                    <option value="sets">أطقم إكسسوارات</option>
+                                    <option value="misc">متنوعات</option>
+                                </select></label>
+                            <label class="field-label">السعر بالجنيه<input id="product-price" type="number" min="1"
+                                    step="0.01" required></label>
+                        </div>
+                        <label class="field-label">الوصف<textarea id="product-description" rows="3" maxlength="300"
+                                required></textarea></label>
+                        <label class="field-label">رابط صورة<input id="product-image-url" type="url" inputmode="url"
+                                placeholder="https://..."></label>
+                        <button class="admin-text-button" id="add-product-image-url" type="button">إضافة رابط الصورة</button>
+                        <label class="field-label">أو اختاري صورة أو أكثر<input id="product-image-file" type="file"
+                                accept="image/*,.heic,.heif,.avif,.jxl" multiple></label>
+                        <p class="field-help">صيغ الصور الشائعة للهواتف، بما فيها HEIC/HEIF وAVIF، تُحوّل وتُضغط تلقائياً قبل الرفع؛ لا يوجد حدّ حجم ثابت للملف الأصلي. اختاري عدة صور معاً أو أضيفيها على دفعات. رتّبي الصور؛ الأولى هي الرئيسية.</p>
+                        <div class="image-queue" id="product-image-list" aria-live="polite"></div>
+                        <p class="field-help" id="product-upload-status" role="status" aria-live="polite" hidden></p>
+                        <p class="admin-alert" id="product-error" role="alert" hidden></p>
+                        <div class="form-actions"><button class="button button-dark" type="submit" id="save-product">حفظ
+                                المنتج</button><button class="button button-outline" type="button" id="cancel-edit"
+                                hidden>إلغاء التعديل</button></div>
+                    </form>
+                    <div class="product-list-wrap">
+                        <div class="list-heading">
+                            <h3>المنتجات الحالية</h3>
+                        </div>
+                        <div class="product-admin-list" id="product-admin-list" aria-live="polite"></div>
+                    </div>
+                </div>
+                <section class="hero-settings" aria-labelledby="hero-settings-title">
+                    <h2 id="hero-settings-title">صورة الصفحة الرئيسية</h2>
+                    <p>غيّري الصورة الرئيسية فقط؛ سيبقى النص «مصممة لتدوم» كما هو. الصورة الحالية هي الافتراضية.</p>
+                    <form id="hero-form">
+                        <label class="field-label">رابط صورة الهيدر<input id="hero-image-url" type="url" inputmode="url"
+                                placeholder="https://..."></label>
+                        <label class="field-label">أو ارفعي صورة جديدة<input id="hero-image-file" type="file"
+                                accept="image/*,.heic,.heif,.avif,.jxl"></label>
+                        <img class="hero-image-preview" id="hero-image-preview"
+                            src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&amp;fit=crop&amp;w=1100&amp;q=85"
+                            alt="معاينة صورة الصفحة الرئيسية">
+                        <div class="form-actions"><button class="button button-dark" id="save-hero-image"
+                                type="submit">حفظ صورة الصفحة الرئيسية</button></div>
+                        <p class="admin-alert" id="hero-error" role="alert" hidden></p>
+                    </form>
+                </section>
+            </section>
+
+            <section class="admin-panel" id="orders-panel" role="tabpanel" aria-labelledby="orders-tab" hidden>
+                <div class="panel-title-row">
+                    <div>
+                        <h2>طلبات العملاء</h2>
+                        <p>الطلبات الجديدة تحتاج إلى مراجعة التحويل يدويًا قبل التأكيد.</p>
+                    </div><button class="button button-outline" id="refresh-orders" type="button">تحديث الطلبات</button>
+                </div>
+                <div class="orders-list" id="orders-list" aria-live="polite"></div>
+            </section>
+        </section>
+    </main>
+</body>
+
+</html>

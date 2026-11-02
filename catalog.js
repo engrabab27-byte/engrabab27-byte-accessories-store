@@ -1,0 +1,1 @@
+window.FEDAA_CATALOG = [];
