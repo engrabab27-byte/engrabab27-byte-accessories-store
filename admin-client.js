@@ -147,18 +147,13 @@ async function orderReceiptUrl(order, signed = false) {
     const receiptValue = storedPath || legacyReceiptUrl;
     if (!receiptValue) return "";
 
-    let receiptPath = receiptValue;
     if (/^https?:\/\//i.test(receiptValue)) {
-        const safeUrl = safeImageUrl(receiptValue);
-        if (!safeUrl) throw new Error("رابط إيصال التحويل المسجل غير صالح.");
-        const url = new URL(safeUrl);
-        const storagePath = url.pathname.match(/\/storage\/v1\/object\/(?:sign|public)\/order-receipts\/(.+)$/);
-        if (!storagePath) return safeUrl;
-        receiptPath = storagePath[1].split("/").map((part) => decodeURIComponent(part)).join("/");
-    } else {
-        receiptPath = receiptValue.replace(/^\/+/, "");
+        const receiptUrl = safeImageUrl(receiptValue);
+        if (!receiptUrl) throw new Error("رابط إيصال التحويل المسجل غير صالح.");
+        return receiptUrl;
     }
 
+    const receiptPath = receiptValue.replace(/^\/+/, "");
     const receiptStorage = supabase.storage.from("order-receipts");
     if (!signed) {
         const { data } = receiptStorage.getPublicUrl(receiptPath);
@@ -599,7 +594,7 @@ function renderOrders(orders) {
                         imageUrl: imageSource.href,
                         event
                     });
-                    receiptLabel.textContent = "تعذر تحميل صورة الإيصال. تحققي من وجود الملف وصلاحية قراءة order-receipts في Supabase.";
+                    receiptLabel.textContent = "تعذر تحميل صورة الإيصال. تحققي من وجود الملف وصلاحية القراءة في Supabase.";
                     return;
                 }
                 receiptImage.dataset.signedFallback = "true";
