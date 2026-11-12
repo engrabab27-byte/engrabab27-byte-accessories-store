@@ -141,7 +141,7 @@ function orderTotal(order, items) {
     return savedTotal !== null && savedTotal > 0 ? savedTotal : null;
 }
 
-async function orderReceiptUrl(order) {
+async function orderReceiptUrl(order, signed = false) {
     const storedPath = typeof order.receipt_path === "string" ? order.receipt_path.trim() : "";
     const legacyReceiptUrl = typeof order.receipt_url === "string" ? order.receipt_url.trim() : "";
     const receiptValue = storedPath || legacyReceiptUrl;
@@ -159,11 +159,16 @@ async function orderReceiptUrl(order) {
         receiptPath = receiptValue.replace(/^\/+/, "");
     }
 
-    const { data, error } = await supabase.storage
-        .from("order-receipts")
-        .createSignedUrl(receiptPath, 3600);
+    const receiptStorage = supabase.storage.from("order-receipts");
+    if (!signed) {
+        const { data } = receiptStorage.getPublicUrl(receiptPath);
+        const publicUrl = safeImageUrl(data?.publicUrl);
+        if (publicUrl) return publicUrl;
+    }
+
+    const { data, error } = await receiptStorage.createSignedUrl(receiptPath, 3600);
     throwOnError(error);
-    if (!data?.signedUrl) throw new Error("لم يُرجع مخزن Supabase رابطاً مؤقتاً لصورة الإيصال.");
+    if (!data?.signedUrl) throw new Error("لم يُرجع مخزن Supabase رابطاً صالحاً لصورة الإيصال.");
     return data.signedUrl;
 }
 
@@ -573,10 +578,13 @@ function renderOrders(orders) {
             receiptImage.alt = `إيصال التحويل للطلب ${order.id}`;
             receiptImage.loading = "lazy";
             receiptImage.decoding = "async";
-            receiptImage.addEventListener("error", (event) => {
+            const fullSizeLink = makeElement("a", "receipt-full-link", "فتح الصورة بالحجم الكامل");
+            fullSizeLink.target = "_blank";
+            fullSizeLink.rel = "noopener noreferrer";
+            receiptImage.addEventListener("error", async (event) => {
                 const imageSource = new URL(receiptImage.currentSrc || receiptImage.src, window.location.href);
                 imageSource.search = "";
-                console.error("Order receipt image failed to load.", {
+                console.warn("Public order receipt image failed; trying a private signed URL.", {
                     orderId: order.id,
                     receiptPath: order.receipt_path || order.receipt_url || null,
                     imageUrl: imageSource.href,
@@ -584,12 +592,34 @@ function renderOrders(orders) {
                     naturalHeight: receiptImage.naturalHeight,
                     event
                 });
-                receiptLabel.textContent = "تعذر تحميل صورة الإيصال. راجعي مسار الملف وسياسة قراءة order-receipts في Supabase.";
+                if (receiptImage.dataset.signedFallback === "true") {
+                    console.error("Signed order receipt image failed to load.", {
+                        orderId: order.id,
+                        receiptPath: order.receipt_path || order.receipt_url || null,
+                        imageUrl: imageSource.href,
+                        event
+                    });
+                    receiptLabel.textContent = "تعذر تحميل صورة الإيصال. تحققي من وجود الملف وصلاحية قراءة order-receipts في Supabase.";
+                    return;
+                }
+                receiptImage.dataset.signedFallback = "true";
+                try {
+                    const signedUrl = await orderReceiptUrl(order, true);
+                    receiptImage.src = signedUrl;
+                    fullSizeLink.href = signedUrl;
+                } catch (error) {
+                    console.error("Could not create a signed order receipt URL.", {
+                        orderId: order.id,
+                        receiptPath: order.receipt_path || order.receipt_url || null,
+                        error
+                    });
+                    receiptLabel.textContent = error.message || "تعذر إنشاء رابط آمن لصورة الإيصال.";
+                }
             });
             receiptImage.src = receiptUrl;
             const previewButton = makeButton("", "receipt-preview-button", async () => {
                 try {
-                    const fullImageUrl = await orderReceiptUrl(order);
+                    const fullImageUrl = await orderReceiptUrl(order, true);
                     if (!fullImageUrl) throw new Error("رابط صورة الإيصال غير متاح.");
                     elements.receiptDialogImage.src = fullImageUrl;
                     elements.receiptDialogImage.alt = `صورة إيصال التحويل للطلب ${order.id}`;
@@ -601,10 +631,7 @@ function renderOrders(orders) {
             });
             previewButton.setAttribute("aria-label", `تكبير صورة إيصال التحويل للطلب ${order.id}`);
             previewButton.append(receiptImage);
-            const fullSizeLink = makeElement("a", "receipt-full-link", "فتح الصورة بالحجم الكامل");
             fullSizeLink.href = receiptUrl;
-            fullSizeLink.target = "_blank";
-            fullSizeLink.rel = "noopener noreferrer";
             receipt.append(previewButton, fullSizeLink);
         }).catch((error) => {
             console.error("Could not create an order receipt URL.", {
