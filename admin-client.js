@@ -142,17 +142,29 @@ function orderTotal(order, items) {
 }
 
 async function orderReceiptUrl(order) {
-    const receiptUrl = order.receipt_url;
-    if (typeof receiptUrl === "string" && /^https?:\/\//i.test(receiptUrl)) {
-        const safeUrl = safeImageUrl(receiptUrl);
-        if (safeUrl) return safeUrl;
+    const storedPath = typeof order.receipt_path === "string" ? order.receipt_path.trim() : "";
+    const legacyReceiptUrl = typeof order.receipt_url === "string" ? order.receipt_url.trim() : "";
+    const receiptValue = storedPath || legacyReceiptUrl;
+    if (!receiptValue) return "";
+
+    let receiptPath = receiptValue;
+    if (/^https?:\/\//i.test(receiptValue)) {
+        const safeUrl = safeImageUrl(receiptValue);
+        if (!safeUrl) throw new Error("رابط إيصال التحويل المسجل غير صالح.");
+        const url = new URL(safeUrl);
+        const storagePath = url.pathname.match(/\/storage\/v1\/object\/(?:sign|public)\/order-receipts\/(.+)$/);
+        if (!storagePath) return safeUrl;
+        receiptPath = storagePath[1].split("/").map((part) => decodeURIComponent(part)).join("/");
+    } else {
+        receiptPath = receiptValue.replace(/^\/+/, "");
     }
 
-    const receiptPath = order.receipt_path || receiptUrl;
-    if (!receiptPath) return "";
-    const { data, error } = await supabase.storage.from("order-receipts").createSignedUrl(receiptPath, 3600);
+    const { data, error } = await supabase.storage
+        .from("order-receipts")
+        .createSignedUrl(receiptPath, 3600);
     throwOnError(error);
-    return data?.signedUrl || "";
+    if (!data?.signedUrl) throw new Error("لم يُرجع مخزن Supabase رابطاً مؤقتاً لصورة الإيصال.");
+    return data.signedUrl;
 }
 
 function safeImageUrl(value) {
@@ -558,12 +570,23 @@ function renderOrders(orders) {
             }
             receiptLabel.textContent = "صورة إيصال التحويل أو السكرين شوت";
             const receiptImage = makeElement("img", "receipt-preview");
-            receiptImage.src = receiptUrl;
             receiptImage.alt = `إيصال التحويل للطلب ${order.id}`;
             receiptImage.loading = "lazy";
-            receiptImage.addEventListener("error", () => {
-                receiptLabel.textContent = "تعذر عرض المعاينة؛ استخدمي رابط الصورة بالحجم الكامل.";
+            receiptImage.decoding = "async";
+            receiptImage.addEventListener("error", (event) => {
+                const imageSource = new URL(receiptImage.currentSrc || receiptImage.src, window.location.href);
+                imageSource.search = "";
+                console.error("Order receipt image failed to load.", {
+                    orderId: order.id,
+                    receiptPath: order.receipt_path || order.receipt_url || null,
+                    imageUrl: imageSource.href,
+                    naturalWidth: receiptImage.naturalWidth,
+                    naturalHeight: receiptImage.naturalHeight,
+                    event
+                });
+                receiptLabel.textContent = "تعذر تحميل صورة الإيصال. راجعي مسار الملف وسياسة قراءة order-receipts في Supabase.";
             });
+            receiptImage.src = receiptUrl;
             const previewButton = makeButton("", "receipt-preview-button", async () => {
                 try {
                     const fullImageUrl = await orderReceiptUrl(order);
@@ -584,7 +607,12 @@ function renderOrders(orders) {
             fullSizeLink.rel = "noopener noreferrer";
             receipt.append(previewButton, fullSizeLink);
         }).catch((error) => {
-            receiptLabel.textContent = error.message || "تعذر تحميل صورة الإيصال.";
+            console.error("Could not create an order receipt URL.", {
+                orderId: order.id,
+                receiptPath: order.receipt_path || order.receipt_url || null,
+                error
+            });
+            receiptLabel.textContent = error.message || "تعذر إنشاء رابط صورة الإيصال. تحققي من الملف وسياسة التخزين الخاصة.";
         });
     });
 }
