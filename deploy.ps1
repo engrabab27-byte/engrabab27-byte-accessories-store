@@ -53,15 +53,22 @@ try {
         throw "The staged changes contain whitespace errors; review them before publishing."
     }
     & $git diff --cached --quiet
-    if ($LASTEXITCODE -eq 0) {
-        Write-Output "There are no changes to publish."
+    if ($LASTEXITCODE -ne 0) {
+        & $git commit -m $Message -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not create the deployment commit."
+        }
+    }
+
+    $commitsToPublish = & $git rev-list --count origin/main..HEAD
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not determine whether local commits need publishing."
+    }
+    if ([int]$commitsToPublish -eq 0) {
+        Write-Output "There are no changes or commits to publish."
         return
     }
 
-    & $git commit -m $Message -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not create the deployment commit."
-    }
     & $git push --set-upstream origin main
     if ($LASTEXITCODE -ne 0) {
         throw "Push failed. Authenticate with GitHub or resolve the reported issue, then run this script again."
