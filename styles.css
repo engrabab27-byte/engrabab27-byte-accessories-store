@@ -1243,6 +1243,9 @@ textarea:focus-visible {
 }
 
 .transfer-instructions {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
     min-height: 44px;
     padding: 9px 11px;
     border-right: 2px solid var(--coral);
@@ -1250,6 +1253,7 @@ textarea:focus-visible {
     color: #59434d;
     font-size: 10px;
     line-height: 1.7;
+    overflow-wrap: anywhere;
 }
 
 .payment-option-action[hidden] {
@@ -1261,7 +1265,10 @@ textarea:focus-visible {
 }
 
 .payment-ussd-code {
-    display: inline-block;
+    box-sizing: border-box;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
     margin: 4px 0;
     padding: 4px 7px;
     border: 1px solid #e14b50;
@@ -1270,16 +1277,37 @@ textarea:focus-visible {
     font-size: 13px;
     font-weight: 700;
     unicode-bidi: isolate;
+    overflow-wrap: anywhere;
 }
 
 .payment-action-link {
     display: block;
-    width: fit-content;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
     margin-top: 7px;
-    color: var(--green);
+    padding: 11px 14px;
+    border: 1px solid var(--green);
+    border-radius: 4px;
+    background: var(--green);
+    color: var(--white);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
     font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.payment-action-link:hover,
+.payment-action-link:focus-visible {
+    background: #17613f;
+    color: var(--white);
+}
+
+.payment-action-link:focus-visible {
+    outline: 3px solid #e14b50;
+    outline-offset: 2px;
 }
 
 .deposit-notice {
@@ -1453,6 +1481,10 @@ textarea:focus-visible {
 }
 
 @media (max-width: 620px) {
+    .payment-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .announcement {
         min-height: 30px;
         font-size: 10px;

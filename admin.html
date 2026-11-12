@@ -13,12 +13,12 @@
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="admin.css?v=20261031-1957">
+    <link rel="stylesheet" href="admin.css?v=20261112-2218">
     <script defer src="catalog.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="supabase-config.js"></script>
     <script defer src="supabase-client.js"></script>
-    <script defer src="admin-client.js?v=20261102-2345"></script>
+    <script defer src="admin-client.js?v=20261112-2218"></script>
 </head>
 
 <body class="admin-page">
@@ -141,6 +141,13 @@
             </section>
         </section>
     </main>
+    <dialog class="receipt-dialog" id="receipt-dialog" aria-label="معاينة صورة إيصال التحويل">
+        <form method="dialog">
+            <button class="receipt-dialog-close" type="submit" aria-label="إغلاق صورة الإيصال">إغلاق</button>
+        </form>
+        <img id="receipt-dialog-image" alt="">
+        <p id="receipt-dialog-error" role="status" hidden>تعذر عرض الصورة. أغلقي النافذة وحاولي فتحها مرة أخرى.</p>
+    </dialog>
 </body>
 
 </html>

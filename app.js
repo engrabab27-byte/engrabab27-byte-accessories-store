@@ -8,9 +8,10 @@ const PAYMENT_DETAILS = {
 };
 
 const EGP = new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 2 });
-const MAX_RECEIPT_SOURCE_BYTES = 20 * 1024 * 1024;
-const MAX_COMPRESSED_RECEIPT_BYTES = 2 * 1024 * 1024;
-const MAX_RECEIPT_DIMENSION = 1800;
+const MAX_RECEIPT_SOURCE_BYTES = 50 * 1024 * 1024;
+const MAX_COMPRESSED_RECEIPT_BYTES = 4 * 1024 * 1024;
+const MAX_RECEIPT_DIMENSION = 2200;
+const HEIC_DECODER_URL = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
 const productGrid = document.querySelector("#product-grid");
 const productModal = document.querySelector("#product-modal");
 const cart = new Map();
@@ -22,57 +23,105 @@ let productModalImages = [];
 let productModalImageIndex = 0;
 let checkoutSubmissionInProgress = false;
 let suppressProductCardClick = false;
+let heicDecoderPromise = null;
 
 const formatPrice = (amount) => `${EGP.format(amount)} ج.م`;
 const receiptExtension = (file) => ({
-    "image/jpeg": "jpg",
     "image/png": "png",
     "image/webp": "webp"
 }[file.type]);
 
-async function compressCheckoutReceipt(file) {
-    if (!receiptExtension(file)) throw new Error("ارفعي صورة JPG أو PNG أو WEBP.");
-    if (file.size > MAX_RECEIPT_SOURCE_BYTES) {
-        throw new Error("حجم صورة الإيصال يتجاوز ٢٠ ميجابايت. اختاري صورة أصغر.");
-    }
+function isSupportedReceiptImage(file) {
+    return file.type.startsWith("image/")
+        || /\.(jpe?g|png|webp|gif|bmp|tiff?|avif|heic|heif|jxl)$/i.test(file.name);
+}
 
-    let image;
-    let disposeImage;
+function isHeicReceipt(file) {
+    return /image\/hei[cf]/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+}
+
+function loadHeicDecoder() {
+    if (typeof window.heic2any === "function") return Promise.resolve(window.heic2any);
+    if (heicDecoderPromise) return heicDecoderPromise;
+
+    heicDecoderPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = HEIC_DECODER_URL;
+        script.async = true;
+        script.onload = () => {
+            if (typeof window.heic2any !== "function") {
+                reject(new Error("تعذر تهيئة قارئ HEIC. تحققي من الاتصال ثم أعيدي المحاولة."));
+                return;
+            }
+            resolve(window.heic2any);
+        };
+        script.onerror = () => reject(new Error("تعذر تحميل دعم HEIC/HEIF. تحققي من الاتصال ثم أعيدي المحاولة."));
+        document.head.append(script);
+    }).catch((error) => {
+        heicDecoderPromise = null;
+        throw error;
+    });
+    return heicDecoderPromise;
+}
+
+async function decodeReceiptImage(file) {
     if (typeof createImageBitmap === "function") {
         try {
-            image = await createImageBitmap(file, {
-                resizeWidth: MAX_RECEIPT_DIMENSION,
-                resizeQuality: "high"
-            });
-            disposeImage = () => image.close();
+            const bitmap = await createImageBitmap(file);
+            return { image: bitmap, dispose: () => bitmap.close() };
         } catch {
-            image = null;
+            // Fall through to the image element decoder and HEIC fallback.
         }
-    }
-    if (!image) {
-        const objectUrl = URL.createObjectURL(file);
-        image = new Image();
-        try {
-            await new Promise((resolve, reject) => {
-                image.onload = resolve;
-                image.onerror = () => reject(new Error("تعذر قراءة صورة الإيصال. اختاري صورة سليمة."));
-                image.src = objectUrl;
-            });
-        } catch (error) {
-            URL.revokeObjectURL(objectUrl);
-            throw error;
-        }
-        disposeImage = () => URL.revokeObjectURL(objectUrl);
     }
 
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
     try {
-        const sourceWidth = image.width || image.naturalWidth;
-        const sourceHeight = image.height || image.naturalHeight;
-        if (!sourceWidth || !sourceHeight) throw new Error("تعذر قراءة أبعاد صورة الإيصال.");
-        if (file.size <= MAX_COMPRESSED_RECEIPT_BYTES
-            && Math.max(sourceWidth, sourceHeight) < MAX_RECEIPT_DIMENSION) return file;
+        await new Promise((resolve, reject) => {
+            image.onload = resolve;
+            image.onerror = () => reject(new Error("تعذر فك ترميز الصورة في المتصفح."));
+            image.src = objectUrl;
+        });
+        return { image, dispose: () => URL.revokeObjectURL(objectUrl) };
+    } catch (browserError) {
+        URL.revokeObjectURL(objectUrl);
+        if (!isHeicReceipt(file)) throw browserError;
 
-        for (const maxDimension of [MAX_RECEIPT_DIMENSION, 1440, 1080, 800]) {
+        const heic2any = await loadHeicDecoder();
+        let converted;
+        try {
+            converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+        } catch (error) {
+            throw new Error(`تعذر تحويل صورة HEIC/HEIF: ${error.message || browserError.message}`);
+        }
+        const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
+        if (!(jpegBlob instanceof Blob)) throw new Error("تعذر تحويل صورة HEIC/HEIF إلى صيغة قابلة للمعالجة.");
+        return decodeReceiptImage(jpegBlob);
+    }
+}
+
+function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("تعذر ضغط صورة الإيصال. اختاري صورة أخرى."));
+        }, type, quality);
+    });
+}
+
+async function compressCheckoutReceipt(file) {
+    if (!isSupportedReceiptImage(file)) throw new Error("اختاري ملف صورة صالحاً، مثل JPG أو PNG أو HEIC.");
+    if (file.size > MAX_RECEIPT_SOURCE_BYTES) {
+        throw new Error("حجم الصورة يتجاوز ٥٠ ميجابايت. اختاري صورة أصغر.");
+    }
+
+    const decoded = await decodeReceiptImage(file);
+    try {
+        const sourceWidth = decoded.image.width || decoded.image.naturalWidth;
+        const sourceHeight = decoded.image.height || decoded.image.naturalHeight;
+        if (!sourceWidth || !sourceHeight) throw new Error("تعذر قراءة أبعاد صورة الإيصال.");
+
+        for (const maxDimension of [MAX_RECEIPT_DIMENSION, 1800, 1440, 1080]) {
             const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
             const width = Math.max(1, Math.round(sourceWidth * scale));
             const height = Math.max(1, Math.round(sourceHeight * scale));
@@ -82,16 +131,20 @@ async function compressCheckoutReceipt(file) {
             try {
                 const context = canvas.getContext("2d");
                 if (!context) throw new Error("تعذر تجهيز صورة الإيصال على هذا الجهاز.");
-                context.drawImage(image, 0, 0, width, height);
-                for (const quality of [0.82, 0.68, 0.54]) {
-                    const compressed = await new Promise((resolve, reject) => {
-                        canvas.toBlob((blob) => {
-                            if (blob) resolve(blob);
-                            else reject(new Error("تعذر ضغط صورة الإيصال. اختاري صورة أخرى."));
-                        }, "image/webp", quality);
-                    });
+                context.drawImage(decoded.image, 0, 0, width, height);
+                for (const quality of [0.86, 0.78, 0.7, 0.62, 0.54]) {
+                    const compressed = await canvasToBlob(canvas, "image/webp", quality);
+                    if (compressed.type === "image/png") {
+                        if (compressed.size <= MAX_COMPRESSED_RECEIPT_BYTES) {
+                            return new File([compressed], "receipt.png", {
+                                type: "image/png",
+                                lastModified: Date.now()
+                            });
+                        }
+                        break;
+                    }
                     if (compressed.type !== "image/webp") {
-                        throw new Error("متصفحك لا يدعم ضغط صورة الإيصال. استخدمي متصفحاً أحدث.");
+                        throw new Error("متصفحك لا يدعم تحويل صورة الإيصال. استخدمي متصفحاً أحدث.");
                     }
                     if (compressed.size <= MAX_COMPRESSED_RECEIPT_BYTES) {
                         return new File([compressed], "receipt.webp", {
@@ -106,7 +159,7 @@ async function compressCheckoutReceipt(file) {
             }
         }
     } finally {
-        disposeImage();
+        decoded.dispose();
     }
 
     throw new Error("تعذر ضغط صورة الإيصال إلى الحجم المطلوب. اختاري صورة أصغر.");
@@ -579,7 +632,7 @@ document.querySelector("#receipt-input").addEventListener("change", (event) => {
     const hint = document.createElement("small");
     hint.textContent = file
         ? `${(file.size / 1024 / 1024).toFixed(2)} ميجابايت قبل الضغط`
-        : "سيتم ضغط الصورة تلقائياً، حتى ٢٠ ميجابايت قبل الضغط";
+        : "JPG وPNG وHEIC ولقطات الشاشة؛ ضغط تلقائي حتى ٥٠ ميجابايت";
     uploadCopy.append(hint);
 });
 
@@ -611,9 +664,8 @@ document.querySelector(".checkout-form").addEventListener("submit", async (event
         error.hidden = false;
         return;
     }
-    if (!sourceFile || sourceFile.size > MAX_RECEIPT_SOURCE_BYTES
-        || !["image/jpeg", "image/png", "image/webp"].includes(sourceFile.type)) {
-        error.textContent = "ارفعي صورة JPG أو PNG أو WEBP بحجم لا يتجاوز ٢٠ ميجابايت قبل الضغط.";
+    if (!sourceFile || sourceFile.size > MAX_RECEIPT_SOURCE_BYTES || !isSupportedReceiptImage(sourceFile)) {
+        error.textContent = "ارفعي صورة صالحة مثل JPG أو PNG أو HEIC بحجم لا يتجاوز ٥٠ ميجابايت قبل الضغط.";
         error.hidden = false;
         return;
     }

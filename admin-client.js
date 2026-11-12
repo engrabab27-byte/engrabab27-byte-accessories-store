@@ -43,6 +43,9 @@ const elements = {
     productsCount: document.querySelector("#product-count"),
     ordersList: document.querySelector("#orders-list"),
     ordersCount: document.querySelector("#order-count"),
+    receiptDialog: document.querySelector("#receipt-dialog"),
+    receiptDialogImage: document.querySelector("#receipt-dialog-image"),
+    receiptDialogError: document.querySelector("#receipt-dialog-error"),
     heroForm: document.querySelector("#hero-form"),
     heroImageUrl: document.querySelector("#hero-image-url"),
     heroImageFile: document.querySelector("#hero-image-file"),
@@ -147,7 +150,7 @@ async function orderReceiptUrl(order) {
 
     const receiptPath = order.receipt_path || receiptUrl;
     if (!receiptPath) return "";
-    const { data, error } = await supabase.storage.from("order-receipts").createSignedUrl(receiptPath, 300);
+    const { data, error } = await supabase.storage.from("order-receipts").createSignedUrl(receiptPath, 3600);
     throwOnError(error);
     return data?.signedUrl || "";
 }
@@ -426,7 +429,11 @@ function renderOrders(orders) {
         const cashDue = remainingAmount === null || deliveryFee === null
             ? null
             : remainingAmount + deliveryFee;
-        amounts.append(makeElement("strong", "", `إجمالي المنتجات: ${money(validTotal)}`));
+        amounts.append(makeElement(
+            "strong",
+            "order-grand-total",
+            `إجمالي الطلب (بدون التوصيل): ${money(validTotal)}`
+        ));
         const paymentBadge = makeElement(
             "strong",
             `payment-status-badge ${isFullPayment ? "is-full-payment" : isDepositPayment ? "is-deposit-payment" : "is-payment-unknown"}`,
@@ -486,6 +493,10 @@ function renderOrders(orders) {
         });
         deliveryEditor.append(deliveryLabel, saveDeliveryFee);
         details.append(deliveryEditor);
+        const receipt = makeElement("div", "receipt-link");
+        const receiptLabel = makeElement("span", "", "جارٍ تحميل صورة إيصال التحويل أو السكرين شوت…");
+        receipt.append(receiptLabel);
+        details.append(receipt);
 
         const actions = makeElement("div", "order-card-actions");
         const status = document.createElement("select");
@@ -537,10 +548,6 @@ function renderOrders(orders) {
             }
         });
         actions.append(deleteButton);
-        const receipt = makeElement("a", "receipt-link");
-        const receiptLabel = makeElement("span", "", "جارٍ تحميل الإيصال…");
-        receipt.append(receiptLabel);
-        actions.append(receipt);
         card.append(details, actions);
         elements.ordersList.append(card);
 
@@ -549,20 +556,46 @@ function renderOrders(orders) {
                 receiptLabel.textContent = "لا توجد صورة إيصال لهذا الطلب.";
                 return;
             }
-            receipt.href = receiptUrl;
-            receipt.target = "_blank";
-            receipt.rel = "noopener noreferrer";
-            receiptLabel.textContent = "عرض صورة إيصال التحويل";
+            receiptLabel.textContent = "صورة إيصال التحويل أو السكرين شوت";
             const receiptImage = makeElement("img", "receipt-preview");
             receiptImage.src = receiptUrl;
             receiptImage.alt = `إيصال التحويل للطلب ${order.id}`;
             receiptImage.loading = "lazy";
-            receipt.append(receiptImage);
+            receiptImage.addEventListener("error", () => {
+                receiptLabel.textContent = "تعذر عرض المعاينة؛ استخدمي رابط الصورة بالحجم الكامل.";
+            });
+            const previewButton = makeButton("", "receipt-preview-button", async () => {
+                try {
+                    const fullImageUrl = await orderReceiptUrl(order);
+                    if (!fullImageUrl) throw new Error("رابط صورة الإيصال غير متاح.");
+                    elements.receiptDialogImage.src = fullImageUrl;
+                    elements.receiptDialogImage.alt = `صورة إيصال التحويل للطلب ${order.id}`;
+                    elements.receiptDialogError.hidden = true;
+                    elements.receiptDialog.showModal();
+                } catch (error) {
+                    showMessage(elements.dashboardMessage, error.message || "تعذر فتح صورة الإيصال.");
+                }
+            });
+            previewButton.setAttribute("aria-label", `تكبير صورة إيصال التحويل للطلب ${order.id}`);
+            previewButton.append(receiptImage);
+            const fullSizeLink = makeElement("a", "receipt-full-link", "فتح الصورة بالحجم الكامل");
+            fullSizeLink.href = receiptUrl;
+            fullSizeLink.target = "_blank";
+            fullSizeLink.rel = "noopener noreferrer";
+            receipt.append(previewButton, fullSizeLink);
         }).catch((error) => {
             receiptLabel.textContent = error.message || "تعذر تحميل صورة الإيصال.";
         });
     });
 }
+
+elements.receiptDialogImage.addEventListener("error", () => {
+    elements.receiptDialogError.hidden = false;
+});
+
+elements.receiptDialog.addEventListener("click", (event) => {
+    if (event.target === elements.receiptDialog) elements.receiptDialog.close();
+});
 
 function fileExtension(file) {
     return { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[file.type];

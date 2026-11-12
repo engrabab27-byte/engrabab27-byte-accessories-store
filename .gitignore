@@ -1,0 +1,4 @@
+/order-sent/
+.env
+.env.*
+!.env.example

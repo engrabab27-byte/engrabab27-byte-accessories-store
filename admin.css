@@ -443,6 +443,24 @@
     color: var(--ink);
 }
 
+.order-amounts .order-grand-total {
+    flex-basis: 100%;
+    width: fit-content;
+    padding: 9px 12px;
+    border: 1px solid #16834b;
+    border-radius: 4px;
+    background: #e6f7ed;
+    color: #116b3c;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.order-card .receipt-link {
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid var(--line);
+}
+
 .delivery-fee-editor {
     display: flex;
     flex-wrap: wrap;
@@ -541,20 +559,74 @@
 
 .receipt-link {
     display: grid;
-    justify-items: end;
+    justify-items: start;
     gap: 7px;
     color: var(--green);
     font-size: 11px;
     font-weight: 700;
-    text-decoration: underline;
+}
+
+.receipt-preview-button {
+    display: block;
+    width: min(220px, 100%);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: zoom-in;
 }
 
 .receipt-preview {
-    width: min(180px, 100%);
-    max-height: 220px;
+    display: block;
+    width: 100%;
+    max-height: 280px;
     border: 1px solid var(--line);
     object-fit: contain;
     background: #fbf7f8;
+}
+
+.receipt-full-link {
+    text-decoration: underline;
+}
+
+.receipt-dialog {
+    position: relative;
+    width: min(96vw, 1120px);
+    max-width: none;
+    max-height: 96dvh;
+    padding: 46px 12px 12px;
+    border: 1px solid var(--line);
+    background: var(--white);
+}
+
+.receipt-dialog::backdrop {
+    background: rgb(18 24 31 / 78%);
+}
+
+.receipt-dialog form {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+.receipt-dialog-close {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.receipt-dialog img {
+    display: block;
+    width: 100%;
+    height: min(84dvh, 1100px);
+    object-fit: contain;
+}
+
+.receipt-dialog p {
+    color: #a23e54;
+    text-align: center;
 }
 
 .empty-admin-state {
@@ -613,8 +685,13 @@
 
     .order-card-actions {
         flex-direction: row;
+        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
+    }
+
+    .receipt-link {
+        width: 100%;
     }
 }
 

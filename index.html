@@ -25,7 +25,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="supabase-config.js"></script>
     <script defer src="supabase-client.js"></script>
-    <script src="app.js?v=20261031-1957" defer></script>
+    <script src="app.js?v=20261112-2109" defer></script>
 </head>
 
 <body>
@@ -250,9 +250,9 @@
             </fieldset>
             <label class="field-label receipt-label">صورة إيصال التحويل <span class="required-mark">مطلوب</span>
                 <span class="upload-control"><input id="receipt-input" type="file" name="receipt"
-                        accept="image/jpeg,image/png,image/webp" required><span class="upload-icon"
+                        accept="image/*,.heic,.heif,.avif,.jxl" required><span class="upload-icon"
                         aria-hidden="true">↑</span><span class="upload-copy" id="upload-copy">اختاري صورة من
-                        جهازك<small>سيتم ضغط الصورة تلقائياً، حتى ٢٠ ميجابايت قبل الضغط</small></span></span>
+                        جهازك<small>JPG وPNG وHEIC ولقطات الشاشة؛ ضغط تلقائي حتى ٥٠ ميجابايت</small></span></span>
             </label>
             <p class="form-error" id="form-error" role="alert" hidden></p>
             <div class="checkout-summary"><span>إجمالي المنتجات</span><strong id="checkout-total">٠ ج.م</strong></div>

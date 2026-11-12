@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="140" viewBox="0 0 520 140" role="img" aria-labelledby="title">
+  <title id="title">FEDAA STORE</title>
+  <circle cx="70" cy="70" r="59" fill="#874761"/>
+  <path d="M48 99V42h47v12H62v12h29v12H62v21H48Z" fill="#fff7fa"/>
+  <path d="M108 30a5 5 0 1 1 10 0 5 5 0 0 1-10 0Z" fill="#d79a79"/>
+  <text x="145" y="79" fill="#35232c" font-family="Arial, sans-serif" font-size="50" font-weight="700" letter-spacing="2">FEDAA</text>
+  <text x="148" y="109" fill="#c46886" font-family="Arial, sans-serif" font-size="19" font-weight="600" letter-spacing="8">STORE</text>
+</svg>
