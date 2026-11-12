@@ -147,14 +147,27 @@ async function orderReceiptUrl(order, signed = false) {
     const receiptValue = storedPath || legacyReceiptUrl;
     if (!receiptValue) return "";
 
+    let receiptPath = receiptValue;
+    let receiptBucket = "order-receipts";
     if (/^https?:\/\//i.test(receiptValue)) {
-        const receiptUrl = safeImageUrl(receiptValue);
-        if (!receiptUrl) throw new Error("رابط إيصال التحويل المسجل غير صالح.");
-        return receiptUrl;
+        const safeUrl = safeImageUrl(receiptValue);
+        if (!safeUrl) throw new Error("رابط إيصال التحويل المسجل غير صالح.");
+        const url = new URL(safeUrl);
+        const storageObject = url.pathname.match(
+            /\/storage\/v1\/object\/(?:sign|public|authenticated)\/([^/]+)\/(.+)$/
+        );
+        if (!storageObject) return safeUrl;
+        try {
+            receiptBucket = decodeURIComponent(storageObject[1]);
+            receiptPath = storageObject[2].split("/").map((part) => decodeURIComponent(part)).join("/");
+        } catch {
+            throw new Error("مسار إيصال التحويل المسجل غير صالح.");
+        }
+    } else {
+        receiptPath = receiptValue.replace(/^\/+/, "");
     }
 
-    const receiptPath = receiptValue.replace(/^\/+/, "");
-    const receiptStorage = supabase.storage.from("order-receipts");
+    const receiptStorage = supabase.storage.from(receiptBucket);
     if (!signed) {
         const { data } = receiptStorage.getPublicUrl(receiptPath);
         const publicUrl = safeImageUrl(data?.publicUrl);
