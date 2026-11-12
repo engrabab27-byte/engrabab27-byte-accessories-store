@@ -334,7 +334,8 @@ begin
         'total', order_total,
         'deposit', order_deposit,
         'remaining', order_total - order_deposit,
-        'payment_option', payment_option
+        'payment_option', payment_option,
+        'receipt_path', receipt_path
     );
 end;
 $$;

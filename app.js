@@ -694,7 +694,7 @@ document.querySelector(".checkout-form").addEventListener("submit", async (event
     try {
         const file = await compressCheckoutReceipt(sourceFile);
         const receiptPath = `${orderId}/receipt.${receiptExtension(file)}`;
-        orderData.receipt_path = receiptPath;
+        const orderPayload = { ...orderData, receipt_path: receiptPath };
         const backupKey = `fedaa:pending-order:${orderId}`;
         try {
             localStorage.setItem(backupKey, JSON.stringify({
@@ -702,7 +702,7 @@ document.querySelector(".checkout-form").addEventListener("submit", async (event
                 version: 1,
                 saved_at: new Date().toISOString(),
                 state: "pending",
-                order: orderData,
+                order: orderPayload,
                 receipt: { name: sourceFile.name, type: file.type, size: file.size }
             }));
         } catch (storageError) {
@@ -717,7 +717,7 @@ document.querySelector(".checkout-form").addEventListener("submit", async (event
             throw new Error(`تعذر رفع إيصال التحويل: ${uploadError.message || "تحققي من الاتصال وحاولي مرة أخرى."}`);
         }
 
-        const { data: savedOrder, error: orderError } = await supabase.rpc("create_order", { order_data: orderData });
+        const { data: savedOrder, error: orderError } = await supabase.rpc("create_order", { order_data: orderPayload });
         if (orderError) {
             try {
                 const { error: cleanupError } = await supabase.storage.from("order-receipts").remove([receiptPath]);
@@ -728,6 +728,9 @@ document.querySelector(".checkout-form").addEventListener("submit", async (event
             throw new Error(orderError.message || "رفضت قاعدة البيانات بيانات الطلب. راجعي بيانات التوصيل والسلة ثم أعيدي المحاولة.");
         }
         if (!savedOrder?.id) throw new Error("لم يتم تأكيد حفظ الطلب.");
+        if (savedOrder.receipt_path !== receiptPath) {
+            throw new Error("لم تؤكد قاعدة البيانات حفظ مسار الإيصال. شغّلي supabase-setup.sql في SQL Editor بمشروع Supabase.");
+        }
         try {
             localStorage.removeItem(backupKey);
         } catch (storageError) {
